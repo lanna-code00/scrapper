@@ -1,20 +1,61 @@
 <?php
-
 namespace App;
 
-require 'vendor/autoload.php';
+require 'C:/projects/learnings/magpie-developer-challenge/vendor/autoload.php';
 
 class Scrape
 {
-    private array $products = [];
+    private array $products = array();
+    protected $myProducts = array();
 
-    public function run(): void
+    public function run($pageNo): void
     {
-        $document = ScrapeHelper::fetchDocument('https://www.magpiehq.com/developer-challenge/smartphones');
+        $document = ScrapeHelper::fetchDocument("https://www.magpiehq.com/developer-challenge/smartphones/?page=$pageNo");
+        $document->filter('#products > div.flex.flex-wrap.-mx-4 > div > div')->each(function ($node, $i) {
+        });
+        $items =  $document->filter('div.flex.flex-wrap.-mx-4 > div > div')->each(function ($node, $i) {
+            $imgs = $node->filter('img')->attr('src');
+            $newImages = preg_replace( "/^\.+|\.+$/", "", $imgs);
+            $images = 'https://www.magpiehq.com/developer-challenge'.$newImages;
+            $capacityGb = $node->filter('h3 > span.product-capacity')->text();
+            $trimmedGb = str_replace(' ', '', $capacityGb);
+            $parsedGb = (int) substr($trimmedGb, 0, strlen($trimmedGb)-2);
+            $price = $node->filter('div.my-8.block.text-center.text-lg')->text();
+            $colors = $node->filter('div > div > div > span.border.border-black.rounded-full.block')->first()->attr('style');
+            $newdata = explode(' ', $colors);
+            
+            $myArr = array(
+                "imageUrl" => $images,
+                "title" => $node->filter('h3 > span.product-name')->text(),
+                "capacityMb" => $parsedGb*1024 ."MB",
+                "price" => substr($price, 2),
+                "availabilityText" => $node->filter('div.my-4.text-sm.block.text-center')->first()->text(),
+                "isAvailable" => $node->filter('div.my-4.text-sm.block.text-center')->first()->text() == "Availability: Out of Stock" ? false : true,
+                "shipText" => $node->filter('div.my-4.text-sm.block.text-center')->last()->text(),
+                "color" => $newdata[5],
+            );
+            if (filesize("output.json") && filesize("output.json") == 0) {
+                $first_record = array($myArr);
+                $data_to_save = $first_record;
+            } else {
+                $old_records = json_decode(file_get_contents("output.json")) ? json_decode(file_get_contents("output.json")) : array();
 
-        file_put_contents('output.json', json_encode($this->products));
+                array_push($old_records, $myArr);
+                $data_to_save = $old_records;
+            }
+
+            if (!file_put_contents("output.json", json_encode($data_to_save, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT), LOCK_EX)) {
+                $error = "Something is wrong";
+            } else {
+                $success = 'Successful';
+            }
+    });
+
     }
+
 }
 
 $scrape = new Scrape();
-$scrape->run();
+for ($i=1; $i <= 3; $i++) { 
+    $scrape->run($i);
+}

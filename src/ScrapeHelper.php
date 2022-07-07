@@ -14,5 +14,7 @@ class ScrapeHelper
         $response = $client->get($url);
 
         return new Crawler($response->getBody()->getContents(), $url);
+ 
     }
 }
+
