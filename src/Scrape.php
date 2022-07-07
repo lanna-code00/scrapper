@@ -1,12 +1,12 @@
 <?php
 namespace App;
 
-require 'C:/projects/learnings/magpie-developer-challenge/vendor/autoload.php';
+require 'C:/projects/learnings/web_scrapping/vendor/autoload.php';
 
 class Scrape
 {
     private array $products = array();
-    protected $myProducts = array();
+    protected $dates;
 
     public function run($pageNo): void
     {
@@ -23,7 +23,17 @@ class Scrape
             $price = $node->filter('div.my-8.block.text-center.text-lg')->text();
             $colors = $node->filter('div > div > div > span.border.border-black.rounded-full.block')->first()->attr('style');
             $newdata = explode(' ', $colors);
-            
+            $myDate = $node->filter('div.my-4.text-sm.block.text-center')->last()->text();
+            $statusMessage = explode(" ", $myDate);
+            $SliceDate = array_slice($statusMessage, -3, 3);
+            $date = implode(" ", $SliceDate);
+
+            if ((int)$date) {
+                $convertedDate = (string)$date;
+                $newDate = date_create($convertedDate);
+                $this->dates = date_format($newDate,"Y-m-d");
+            }
+
             $myArr = array(
                 "imageUrl" => $images,
                 "title" => $node->filter('h3 > span.product-name')->text(),
@@ -32,8 +42,12 @@ class Scrape
                 "availabilityText" => $node->filter('div.my-4.text-sm.block.text-center')->first()->text(),
                 "isAvailable" => $node->filter('div.my-4.text-sm.block.text-center')->first()->text() == "Availability: Out of Stock" ? false : true,
                 "shipText" => $node->filter('div.my-4.text-sm.block.text-center')->last()->text(),
+                "shipdate" => $this->dates,
                 "color" => $newdata[5],
             );
+
+            //Saving it inside the file
+
             if (filesize("output.json") && filesize("output.json") == 0) {
                 $first_record = array($myArr);
                 $data_to_save = $first_record;
@@ -43,12 +57,8 @@ class Scrape
                 array_push($old_records, $myArr);
                 $data_to_save = $old_records;
             }
-
-            if (!file_put_contents("output.json", json_encode($data_to_save, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT), LOCK_EX)) {
-                $error = "Something is wrong";
-            } else {
-                $success = 'Successful';
-            }
+file_put_contents("output.json", json_encode($data_to_save, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT), LOCK_EX);
+           
     });
 
     }
