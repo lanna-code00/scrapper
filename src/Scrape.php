@@ -37,7 +37,7 @@ class Scrape
             }
 
             $myArr = array(
-                "pages" => $this->page,
+                // "pages" => $this->page,  If this any need to add pages to the json uncomment this line of code
                 "imageUrl" => $images,
                 "title" => $node->filter('h3 > span.product-name')->text(),
                 "capacityMb" => $parsedGb*1024 ."MB",
