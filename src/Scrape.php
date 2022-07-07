@@ -7,13 +7,15 @@ class Scrape
 {
     private array $products = array();
     protected $dates;
+    protected $page;
 
     public function run($pageNo): void
     {
         $document = ScrapeHelper::fetchDocument("https://www.magpiehq.com/developer-challenge/smartphones/?page=$pageNo");
-        $document->filter('#products > div.flex.flex-wrap.-mx-4 > div > div')->each(function ($node, $i) {
+        $document->filter('#products > p')->each(function ($node, $i) {
+            $this->page = $node->text();
         });
-        $items =  $document->filter('div.flex.flex-wrap.-mx-4 > div > div')->each(function ($node, $i) {
+        $document->filter('#products > div.flex.flex-wrap.-mx-4 > div > div')->each(function ($node, $i) {
             $imgs = $node->filter('img')->attr('src');
             $newImages = preg_replace( "/^\.+|\.+$/", "", $imgs);
             $images = 'https://www.magpiehq.com/developer-challenge'.$newImages;
@@ -35,6 +37,7 @@ class Scrape
             }
 
             $myArr = array(
+                "pages" => $this->page,
                 "imageUrl" => $images,
                 "title" => $node->filter('h3 > span.product-name')->text(),
                 "capacityMb" => $parsedGb*1024 ."MB",
