@@ -2,7 +2,7 @@
 
 namespace App;
 
-require 'vendor/autoload.php';
+require 'C:/projects/learnings/web_scrapping/vendor/autoload.php';
 
 class Scrape
 {

@@ -54,36 +54,20 @@ class Product
 
     public static function getDate(string $shippingDate){
         $date = "";
-        
         if (str_contains($shippingDate , "Jul") || str_contains($shippingDate , "Aug")) { 
             $month = "";
             $day = "";
             $contain_date = substr($shippingDate, -15);
-            if (str_contains($shippingDate , "Jul")) {
-               $month = "07";
-               $arr = explode("Jul", $contain_date , 2);
-               $day = $arr[0];
-            }
-            if(str_contains($shippingDate , "Aug")){
-                $month = "08";
-                $arr = explode("Aug", $contain_date , 2);
-                $day = $arr[0];
-            }
-
-            $date = "2022-". $month ."-". $retVal = (strlen((int) filter_var($day, FILTER_SANITIZE_NUMBER_INT) ) > 1) ?(int) filter_var($day, FILTER_SANITIZE_NUMBER_INT) : "0".(int) filter_var($day, FILTER_SANITIZE_NUMBER_INT);
-        }
-        if (str_contains($shippingDate , "2022-")) { 
-            $date = substr($shippingDate, -10); 
-        }
+            $mainDate = strstr($contain_date," ");
+            $res = str_ireplace( array( '\'', 'on', 'it', 'by' ), ' ', $mainDate);
+            $newDate = date_create($res);
+            $date = date_format($newDate,"Y-m-d");
         if (str_contains($shippingDate , "tomorrow")) {
             $tomorrow = strtotime("+1 day");
-
             //Format the timestamp into a date string
             $date = date("Y-m-d", $tomorrow);
         }
-
-        //jul, aug,
-       
+    }
         return $date;
     }
 
